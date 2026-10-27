@@ -1,0 +1,12 @@
+{
+  "name": "smart-home-monitor",
+  "version": "1.0.0",
+  "description": "Node-RED Smart Home Monitor para despliegue en Render",
+  "private": true,
+  "scripts": {
+    "start": "node-red --userDir /data --settings /data/settings.js"
+  },
+  "dependencies": {
+    "node-red-dashboard": "^3.6.5"
+  }
+}

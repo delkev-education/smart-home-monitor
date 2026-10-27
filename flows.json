@@ -1,0 +1,289 @@
+[
+  {
+    "id": "tab_smart_home",
+    "type": "tab",
+    "label": "Smart Home Monitor",
+    "disabled": false,
+    "info": "Monitor de sensores IoT desplegado en Render."
+  },
+  {
+    "id": "http_in",
+    "type": "http in",
+    "z": "tab_smart_home",
+    "name": "Recibir datos de sensores",
+    "url": "/actualizar_datos",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 140,
+    "wires": [
+      [
+        "json_parse"
+      ]
+    ]
+  },
+  {
+    "id": "json_parse",
+    "type": "json",
+    "z": "tab_smart_home",
+    "name": "Interpretar JSON",
+    "property": "payload",
+    "action": "",
+    "pretty": false,
+    "x": 380,
+    "y": 140,
+    "wires": [
+      [
+        "debug_raw",
+        "process_data"
+      ]
+    ]
+  },
+  {
+    "id": "debug_raw",
+    "type": "debug",
+    "z": "tab_smart_home",
+    "name": "Datos recibidos (JSON)",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 620,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "process_data",
+    "type": "function",
+    "z": "tab_smart_home",
+    "name": "Separar variables y responder",
+    "func": "// Se espera un JSON con temperatura, gas, humedad_suelo, intrusion y energia.\\nconst d = msg.payload || {};\\nconst n = (v, fallback=0) => { const x = Number(v); return Number.isFinite(x) ? x : fallback; };\\nconst intrusion = d.intrusion === true || d.intrusion === 1 || String(d.intrusion).toLowerCase() === 'true' || String(d.intrusion) === '1' ? 'INTRUSIÓN DETECTADA' : 'Sin intrusión';\\nconst outputs = [\\n  { payload: n(d.temperatura) },\\n  { payload: n(d.gas) },\\n  { payload: n(d.humedad_suelo) },\\n  { payload: intrusion },\\n  { payload: n(d.energia) },\\n  { payload: { ok: true, recibido: new Date().toISOString(), variables: ['temperatura','gas','humedad_suelo','intrusion','energia'] } }\\n];\\nreturn outputs;",
+    "outputs": 6,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 650,
+    "y": 180,
+    "wires": [
+      [
+        "gauge_temp"
+      ],
+      [
+        "gauge_gas"
+      ],
+      [
+        "chart_soil"
+      ],
+      [
+        "text_intrusion"
+      ],
+      [
+        "gauge_energy"
+      ],
+      [
+        "http_response"
+      ]
+    ]
+  },
+  {
+    "id": "http_response",
+    "type": "http response",
+    "z": "tab_smart_home",
+    "name": "Responder al emisor",
+    "statusCode": "",
+    "headers": {},
+    "x": 900,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "ui_tab",
+    "type": "ui_tab",
+    "name": "Smart Home Monitor",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "group_clima",
+    "type": "ui_group",
+    "name": "Clima",
+    "tab": "ui_tab",
+    "order": 1,
+    "disp": true,
+    "width": "6",
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "group_seguridad",
+    "type": "ui_group",
+    "name": "Seguridad",
+    "tab": "ui_tab",
+    "order": 2,
+    "disp": true,
+    "width": "6",
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "group_energia",
+    "type": "ui_group",
+    "name": "Energía",
+    "tab": "ui_tab",
+    "order": 3,
+    "disp": true,
+    "width": "6",
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "gauge_temp",
+    "type": "ui_gauge",
+    "z": "tab_smart_home",
+    "name": "Temperatura",
+    "group": "group_clima",
+    "order": 1,
+    "width": 6,
+    "height": 4,
+    "gtype": "gage",
+    "title": "Temperatura",
+    "label": "°C",
+    "format": "{{value}}",
+    "min": 0,
+    "max": "60",
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#ca3838"
+    ],
+    "seg1": "25",
+    "seg2": "40",
+    "className": "",
+    "x": 900,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "gauge_gas",
+    "type": "ui_gauge",
+    "z": "tab_smart_home",
+    "name": "Nivel de gas",
+    "group": "group_seguridad",
+    "order": 1,
+    "width": 6,
+    "height": 4,
+    "gtype": "gage",
+    "title": "Nivel de gas",
+    "label": "valor del sensor",
+    "format": "{{value}}",
+    "min": 0,
+    "max": "1023",
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#ca3838"
+    ],
+    "seg1": "400",
+    "seg2": "700",
+    "className": "",
+    "x": 890,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "chart_soil",
+    "type": "ui_chart",
+    "z": "tab_smart_home",
+    "name": "Humedad del suelo",
+    "group": "group_clima",
+    "order": 2,
+    "width": 6,
+    "height": 4,
+    "label": "Humedad del suelo (%)",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Esperando datos de humedad...",
+    "dot": false,
+    "ymin": "0",
+    "ymax": "100",
+    "removeOlder": "1",
+    "removeOlderPoints": "",
+    "removeOlderUnit": "3600",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [
+      "#1f77b4",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
+    ],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "className": "",
+    "x": 900,
+    "y": 220,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "text_intrusion",
+    "type": "ui_text",
+    "z": "tab_smart_home",
+    "group": "group_seguridad",
+    "order": 2,
+    "width": 6,
+    "height": 1,
+    "name": "Alerta de intrusión",
+    "label": "Estado de seguridad",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "x": 900,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "gauge_energy",
+    "type": "ui_gauge",
+    "z": "tab_smart_home",
+    "name": "Consumo energético",
+    "group": "group_energia",
+    "order": 1,
+    "width": 6,
+    "height": 4,
+    "gtype": "gage",
+    "title": "Consumo energético",
+    "label": "W",
+    "format": "{{value}}",
+    "min": 0,
+    "max": "3000",
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#ca3838"
+    ],
+    "seg1": "1000",
+    "seg2": "2200",
+    "className": "",
+    "x": 900,
+    "y": 340,
+    "wires": []
+  }
+]
